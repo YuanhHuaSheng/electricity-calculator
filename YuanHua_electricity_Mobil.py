@@ -1,17 +1,15 @@
 import streamlit as st
 
-# ✅ 一定要是第一個 Streamlit 指令
+# ✅ 必須為第一個指令
 st.set_page_config(page_title="電費計算器", layout="wide")
 
-# 頁面選單
-page = st.sidebar.selectbox("選擇頁面", ["電費計算器", "消泡劑成本試算", "原液削減率"])
+# Logo 標題
 
-# 設定 Logo 標題
 def show_logo_header(image_file):
     st.image(image_file, width=300)
     st.markdown(
         """
-        <h1 style='text-align: center;'>🌱💧 圓華油品股份有限公司ESG設備電費計算系統 💧🌱</h1>
+        <h1 style='text-align: center;'>🌱💧 圓華油品股份有限公司ESG設備計算系統 💧🌱</h1>
         <p style='text-align: center; font-size: 14px; color: gray;'>製作人員：Sheng</p>
         """,
         unsafe_allow_html=True
@@ -20,8 +18,10 @@ def show_logo_header(image_file):
 # 呼叫設定
 show_logo_header("Company's_Logo_1.png")
 
-if page == "電費計算器":
-    # 預設機型與功率
+# 分頁選單
+page = st.sidebar.selectbox("請選擇功能頁面", ["電費計算", "消泡劑成本試算", "原液削減率"])
+
+if page == "電費計算":
     devices = {
         "CT-AQ5H": 2939,
         "CT-AQ10H": 3364,
@@ -31,7 +31,6 @@ if page == "電費計算器":
         "靈巧型-6H": 2200,
     }
 
-    # 預設電價方案
     electricity_rates = {
         "2025夏季電價": {
             "【平日】尖峰期": 6.89,
@@ -115,42 +114,43 @@ if page == "電費計算器":
 
 elif page == "消泡劑成本試算":
     st.header("🧪 消泡劑成本試算")
-    st.markdown("""
-    請輸入以下參數，系統將計算消泡劑可處理的最大廢液量與成本。
-    """)
 
-    ratio = st.number_input("稀釋比例（原液 : 水）", min_value=1.0, value=1.0, step=1.0)
-    water_ratio = st.number_input("稀釋比例（水的倍數）", min_value=1.0, value=19.0, step=1.0)
+    ratio_part1 = st.number_input("原液比例 (例如 1:19 中的 1)", min_value=0.0, value=1.0)
+    ratio_part2 = st.number_input("水比例 (例如 1:19 中的 19)", min_value=0.0, value=19.0)
+    total_dilution = ratio_part1 + ratio_part2
 
-    original_volume = st.number_input("每桶原液容量 (L)", min_value=0.0, value=15.0, step=1.0)
-    original_price = st.number_input("每桶原液售價 (元)", min_value=0.0, value=15000.0, step=100.0)
+    bucket_volume = st.number_input("每桶原液容量 (L)", min_value=0.0, value=15.0)
+    bucket_price = st.number_input("每桶原液價格 (元)", min_value=0.0, value=15000.0)
 
-    treatment_efficiency = st.number_input("每3L稀釋液可處理廢液量 (L)", min_value=0.0, value=810.0, step=10.0)
+    treat_per_x_liters = st.number_input("稀釋液使用量 (L)", min_value=0.1, value=3.0)
+    waste_per_treatment = st.number_input("每份稀釋液可處理原液量 (L)", min_value=0.0, value=810.0)
 
-    total_diluted = original_volume * (ratio + water_ratio)
-    st.info(f"👉 每桶原液可稀釋為：{total_diluted:.2f} L 稀釋液")
+    diluted_total = bucket_volume * total_dilution
+    treatable_waste = diluted_total / treat_per_x_liters * waste_per_treatment
 
-    diluted_per_liter = treatment_efficiency / 3
-    total_waste = total_diluted * diluted_per_liter
-    cost_per_1000L = original_price / (total_waste / 1000)
+    st.markdown(f"💧 每桶可稀釋：**{diluted_total:.2f}L** 稀釋液")
+    st.markdown(f"♻️ 每桶可處理：**{treatable_waste:.2f}L** 原液")
 
-    st.success(f"♻️ 可處理廢液總量：約 {total_waste:.0f} L")
-    st.success(f"💰 成本：約 {original_price:.0f} 元 / 每 {total_waste:.0f} L 廢液")
-    st.success(f"📉 換算每 1,000L 處理成本：約 {cost_per_1000L:.2f} 元")
+    st.markdown(f"💰 成本為：**{bucket_price:.2f} 元**")
 
-    st.caption("📌 備註：因機台及處理液之屬性、消泡劑價格不同而有所差異")
+    input_waste = st.number_input("想處理的原液量 (L)", min_value=0.0, value=3000.0)
+    if treatable_waste > 0:
+        cost_for_input = (bucket_price / treatable_waste) * input_waste
+        st.markdown(f"📦 處理 {input_waste:.0f}L 原液的成本為：**{cost_for_input:.2f} 元**")
+
+    st.info("🔍 註：因機台及處理液之屬性、消泡劑價格不同而有所差異")
 
 elif page == "原液削減率":
-    st.header("🧪 原液削減率計算")
-    st.markdown("輸入總供應原液量與濃縮液量，系統將自動計算削減率（%）。")
+    st.header("🧮 原液削減率計算")
 
-    total_liquid = st.number_input("總供應原液量 (L)", min_value=0.0, step=1.0)
-    concentrated_liquid = st.number_input("濃縮液量 (L)", min_value=0.0, step=1.0)
+    supply = st.number_input("總供應原液量 (L)", min_value=0.0)
+    concentrate = st.number_input("濃縮液量 (L)", min_value=0.0)
 
-    if concentrated_liquid > 0:
-        multiple = total_liquid / concentrated_liquid
+    if concentrate > 0:
+        multiple = supply / concentrate
         reduction_rate = 100 - (100 / multiple)
-        st.success(f"📊 倍率：{multiple:.2f}")
-        st.success(f"🔻 原液削減率：{reduction_rate:.2f} %")
-    elif total_liquid > 0:
-        st.warning("⚠️ 濃縮液量不可為 0，請重新輸入。")
+
+        st.markdown(f"🔁 **倍率：{multiple:.2f} 倍**")
+        st.markdown(f"📉 **削減率：{reduction_rate:.2f}%**")
+    else:
+        st.warning("請輸入有效的濃縮液量 (不可為 0)")
