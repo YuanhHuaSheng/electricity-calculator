@@ -1,5 +1,22 @@
 import streamlit as st
 
+# ✅ 這一定要是第一個 Streamlit 指令
+# 設定頁面
+st.set_page_config(page_title="電費計算器", layout="wide")
+
+# 設定 Logo 標題
+def show_logo_header(image_file):
+    st.image(image_file, width=300)
+    st.markdown(
+    "<h1 style='text-align: center;'>🌱💧 圓華油品股份有限公司ESG設備電費計算系統 💧🌱</h1>",
+    unsafe_allow_html=True
+)
+
+# 呼叫設定
+show_logo_header("Company's_Logo_1.png")
+
+
+
 # 預設機型與功率
 devices = {
     "CT-AQ5H": 2939,
@@ -21,6 +38,14 @@ electricity_rates = {
         "【週六】離峰期": 1.9,
         "【週日】離峰期": 1.9,
     },
+        "夏季電價": {
+        "【平日】尖峰期": 3.89,
+        "【平日】半尖峰期": 3.13,
+        "【平日】離峰期": 2.50,
+        "【週六】半尖峰期": 2.80,
+        "【週六】離峰期": 2.30,
+        "【週日】離峰期": 2.10
+    },
     "非夏季電價": {
         "【平日】尖峰期": 3.50,
         "【平日】半尖峰期": 2.85,
@@ -36,20 +61,24 @@ labels = [
     "【週六】半尖峰期", "【週六】離峰期", "【週日】離峰期"
 ]
 
-# 設定頁面
-st.set_page_config(page_title="電費計算器", layout="wide")
-
-st.title("📱 圓華ESG設備電費計算器（手機可用）")
-
 # 選擇機型
 device = st.selectbox("選擇機型", list(devices.keys()))
 watt = devices[device]
 kwh = watt / 1000
 st.write(f"💡 消耗電力：{watt} W（= {kwh:.3f} 度 / 每小時）")
 
-# 選擇電價方案
-scheme = st.selectbox("選擇電價方案", list(electricity_rates.keys()), index=0)
-rates = electricity_rates[scheme]
+custom_rate = st.checkbox("✏️ 使用自訂電價")
+
+if custom_rate:
+    st.markdown("🧾 **請輸入每個時段的電價（元/度）**")
+    rates = {}
+    for label in labels:
+        rate_input = st.number_input(f"{label} 每度電價", min_value=0.0, step=0.1, key=f"{label}_custom_rate")
+        rates[label] = rate_input
+else:
+    scheme = st.selectbox("選擇電價方案", list(electricity_rates.keys()), index=0)
+    rates = electricity_rates[scheme]
+
 
 st.markdown("---")
 
