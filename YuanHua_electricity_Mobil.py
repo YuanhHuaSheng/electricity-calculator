@@ -39,7 +39,7 @@ labels = [
 # 設定頁面
 st.set_page_config(page_title="電費計算器", layout="wide")
 
-st.title("📱 電費計算器（手機可用）")
+st.title("📱 圓華ESG設備電費計算器（手機可用）")
 
 # 選擇機型
 device = st.selectbox("選擇機型", list(devices.keys()))
