@@ -8,9 +8,13 @@ st.set_page_config(page_title="電費計算器", layout="wide")
 def show_logo_header(image_file):
     st.image(image_file, width=300)
     st.markdown(
-    "<h1 style='text-align: center;'>🌱💧 圓華油品股份有限公司ESG設備電費計算系統 💧🌱</h1>",
+    """
+    <h1 style='text-align: center;'>🌱💧 圓華油品股份有限公司ESG設備電費計算系統 💧🌱</h1>
+    <p style='text-align: center; font-size: 14px; color: gray;'>製作人員：Sheng</p>
+    """,
     unsafe_allow_html=True
 )
+
 
 # 呼叫設定
 show_logo_header("Company's_Logo_1.png")
