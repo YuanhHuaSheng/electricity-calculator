@@ -1,29 +1,23 @@
 import streamlit as st
 
 # ✅ 這一定要是第一個 Streamlit 指令
-st.set_page_config(page_title="圓華ESG工具", layout="wide")
+# 設定頁面
+st.set_page_config(page_title="電費計算器", layout="wide")
 
-# 共用 LOGO 標題區塊
-def show_logo_header():
-    st.image("Company's_Logo_1.png", width=300)
-    st.markdown("""
-    <h1 style='text-align: center;'>
-    🌱💧 圓華油品股份有限公司ESG設備電費計算系統 💧🌱
-    </h1>
+# 設定 Logo 標題
+def show_logo_header(image_file):
+    st.image(image_file, width=300)
+    st.markdown(
+    """
+    <h1 style='text-align: center;'>🌱💧 圓華油品股份有限公司ESG設備電費計算系統 💧🌱</h1>
     <p style='text-align: center; font-size: 14px; color: gray;'>製作人員：Sheng</p>
-    """, unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+    )
 
-# 分頁選單
-page = st.sidebar.radio("請選擇功能頁面：", [
-    "電費計算器", 
-    "消泡劑成本試算",
-    "原液削減率",
-    "原液處理能力"
-])
-
-show_logo_header()
-
-if page == "電費計算器":
+# 電費計算頁面
+def electricity_page():
+    # 預設機型與功率
     devices = {
         "CT-AQ5H": 2939,
         "CT-AQ10H": 3364,
@@ -33,6 +27,7 @@ if page == "電費計算器":
         "靈巧型-6H": 2200,
     }
 
+    # 預設電價方案
     electricity_rates = {
         "2025夏季電價": {
             "【平日】尖峰期": 6.89,
@@ -68,15 +63,21 @@ if page == "電費計算器":
     device = st.selectbox("選擇機型", list(devices.keys()))
     watt = devices[device]
     kwh = watt / 1000
-    st.write(f"⚡️ 消耗電力：{watt} W（= {kwh:.3f} 度 / 每小時）")
+    st.write(f"⚡ 消耗電力：{watt} W（= {kwh:.3f} 度 / 每小時）")
 
     custom_rate = st.checkbox("✏️ 使用自訂電價")
+
     if custom_rate:
-        st.markdown("📃 **請輸入每個時段的電價（元/度）**")
-        rates = {label: st.number_input(f"{label} 每度電價", min_value=0.0, step=0.1, key=f"{label}_custom") for label in labels}
+        st.markdown("🧾 **請輸入每個時段的電價（元/度）**")
+        rates = {}
+        for label in labels:
+            rate_input = st.number_input(f"{label} 每度電價", min_value=0.0, step=0.1, key=f"{label}_custom_rate")
+            rates[label] = rate_input
     else:
         scheme = st.selectbox("選擇電價方案", list(electricity_rates.keys()), index=0)
         rates = electricity_rates[scheme]
+
+    st.markdown("---")
 
     total_kwh = 0
     total_cost = 0
@@ -84,7 +85,6 @@ if page == "電費計算器":
     for label in labels:
         st.subheader(label)
         cols = st.columns([1, 1, 2])
-
         rate = rates[label]
         cols[0].markdown(f"💰 每度電：{rate:.2f} 元")
         hours = cols[1].number_input(f"{label} 使用時數", min_value=0.0, step=0.5, key=label)
@@ -96,57 +96,98 @@ if page == "電費計算器":
         total_kwh += total_kwh_segment
         total_cost += total_cost_segment
 
-        cols[2].markdown(f"""
-        - 每小時電費：{per_hour_cost:.2f} 元  
-        - 小計度數：{total_kwh_segment:.2f} 度  
-        - 小計電費：{total_cost_segment:.2f} 元
-        """)
+        cols[2].markdown(
+            f"""
+            - 每小時電費：{per_hour_cost:.2f} 元  
+            - 小計度數：{total_kwh_segment:.2f} 度  
+            - 小計電費：{total_cost_segment:.2f} 元
+            """
+        )
 
     st.markdown("---")
     st.success(f"🔢 **總度數：{total_kwh:.2f} 度**")
     st.success(f"💵 **總電費：{total_cost:.2f} 元**")
 
-elif page == "消泡劑成本試算":
-    st.header("消泡劑成本試算")
+# 消泡劑成本試算
 
-    ratio = st.number_input("稀釋比例 (原液 : 水)", min_value=1.0, value=1.0)
-    total_parts = ratio + 19
-    unit_name = f"1:{int(19)}" if ratio == 1.0 else f"1:{int(total_parts - 1)}"
+def defoamer_cost_page():
+    st.header("🧪 消泡劑成本試算")
 
-    price = st.number_input("每桶原液售價 (元)", min_value=0.0, value=15000.0)
-    volume = st.number_input("每桶原液容量 (L)", min_value=0.0, value=15.0)
-    diluted_amount_per_bucket = volume * total_parts
+    st.markdown("### 基本設定")
+    ratio_input = st.text_input("稀釋比例（格式：原液:水）", "1:19")
+    bucket_volume = st.number_input("每桶原液容量 (L)", value=15.0, step=1.0)
+    bucket_price = st.number_input("每桶售價 (元)", value=15000.0, step=100.0)
+    waste_per_x_liters = st.number_input("每 X 公升稀釋液可處理的廢液量 (L)", value=810.0, step=10.0)
+    x_liters = st.number_input("X（稀釋液使用量，單位：L）", value=3.0, step=0.5)
+    target_waste = st.number_input("預計處理的廢液量 (L)", value=3000.0, step=100.0)
 
-    st.write(f"每桶原液可稀釋為 {diluted_amount_per_bucket:.2f} L 稀釋液")
+    try:
+        parts = ratio_input.split(":")
+        concentrate_part = float(parts[0])
+        water_part = float(parts[1])
+        total_ratio = concentrate_part + water_part
 
-    diluted_use = st.number_input("每 __L__ 稀釋液可處理原液量 (L)", value=3.0)
-    waste_per_unit = st.number_input("該稀釋液處理原液量 (L)", value=810.0)
+        diluted_per_concentrate = total_ratio
+        total_diluted = bucket_volume * diluted_per_concentrate
+        waste_per_liter_diluted = waste_per_x_liters / x_liters
+        total_waste_handled = total_diluted * waste_per_liter_diluted
+        cost_per_1000L = bucket_price / (total_waste_handled / 1000)
+        cost_for_target = (target_waste / total_waste_handled) * bucket_price
 
-    waste_per_liter_diluted = waste_per_unit / diluted_use if diluted_use else 0
-    waste_capacity = diluted_amount_per_bucket * waste_per_liter_diluted
-    cost_per_1000L = price / (waste_capacity / 1000) if waste_capacity else 0
+        st.markdown("### 試算結果")
+        st.info(f"📦 每桶可稀釋出稀釋液量：約 **{total_diluted:.2f} L**")
+        st.info(f"🧫 每桶原液可處理廢液量：約 **{total_waste_handled:,.0f} L**")
+        st.success(f"💰 每 1,000L 廢液處理成本：約 **{cost_per_1000L:.2f} 元**")
+        st.success(f"🧾 預估處理 {target_waste:.0f}L 廢液的成本：約 **{cost_for_target:.2f} 元**")
 
-    st.success(f"♻️ 一桶原液可處理約 {waste_capacity:,.0f} L 原液")
-    st.success(f"💰 處理 1,000L 原液成本：約 {cost_per_1000L:.2f} 元")
-    st.caption("\n因機台及處理液之屬性、消泡劑價格不同而有所差異")
+    except:
+        st.error("請輸入正確的稀釋比例格式（例如 1:19）")
 
-elif page == "原液削減率":
-    st.header("原液削減率試算")
-    supply = st.number_input("總供應原液量 (L)", min_value=0.0)
-    concentrate = st.number_input("濃縮液量 (L)", min_value=0.0)
+    st.caption("🔍 備註：因機台及處理液之屬性、消泡劑價格不同而有所差異")
 
-    if concentrate > 0:
-        multiple = supply / concentrate
-        reduction_rate = 100 - (100 / multiple)
-        st.success(f"削減倍率：{multiple:.2f} 倍")
-        st.success(f"原液削減率：約 {reduction_rate:.2f} %")
-    else:
+# 原液削減率
+
+def reduction_rate_page():
+    st.header("📉 原液削減率計算")
+    total_supply = st.number_input("總供應原液量 (L)", min_value=0.0, step=1.0)
+    concentrate_volume = st.number_input("濃縮液量 (L)", min_value=0.0, step=1.0)
+
+    if concentrate_volume == 0:
         st.warning("請輸入有效的濃縮液量")
+    else:
+        multiple = total_supply / concentrate_volume
+        reduction_rate = 100 - (100 / multiple)
+        st.info(f"🔁 濃縮倍率：{multiple:.2f} 倍")
+        st.success(f"📉 削減率：約 {reduction_rate:.2f}%")
 
+# 原液處理能力
+
+def capacity_page():
+    st.header("⚙️ 原液處理能力")
+    total_supply = st.number_input("總供應原液量 (L)", min_value=0.0, step=1.0)
+    time_per_batch = st.number_input("單次濃縮時間 (分鐘)", min_value=0.0, step=1.0)
+
+    if time_per_batch == 0:
+        st.warning("請輸入有效的濃縮時間")
+    else:
+        capacity = (total_supply / time_per_batch) * 60
+        st.success(f"📦 處理能力：約 {capacity:.2f} L/hr")
+
+# 主程式
+show_logo_header("Company's_Logo_1.png")
+
+page = st.sidebar.selectbox("📁 選擇頁面", [
+    "電費計算器", 
+    "消泡劑成本試算", 
+    "原液削減率", 
+    "原液處理能力"
+])
+
+if page == "電費計算器":
+    electricity_page()
+elif page == "消泡劑成本試算":
+    defoamer_cost_page()
+elif page == "原液削減率":
+    reduction_rate_page()
 elif page == "原液處理能力":
-    st.header("原液處理能力計算")
-    total_volume = st.number_input("單次總供應原液量 (L)", min_value=0.0)
-    process_time = st.number_input("單次濃縮時間 (分鐘)", min_value=1.0)
-
-    capacity = total_volume / process_time * 60
-    st.success(f"處理能力：約 {capacity:.2f} 公升 / 小時")
+    capacity_page()
