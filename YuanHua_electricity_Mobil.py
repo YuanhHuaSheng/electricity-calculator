@@ -9,7 +9,7 @@ def show_logo_header(image_file):
     st.image(image_file, width=300)
     st.markdown(
     """
-    <h1 style='text-align: center;'>🌱💧 圓華油品股份有限公司ESG設備電費計算系統 💧🌱</h1>
+    <h1 style='text-align: center;'>🌱💧 圓華油品股份有限公司ESG設備計算系統 💧🌱</h1>
     <p style='text-align: center; font-size: 14px; color: gray;'>製作人員：Sheng</p>
     """,
     unsafe_allow_html=True
