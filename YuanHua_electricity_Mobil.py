@@ -181,7 +181,8 @@ def private_login_page():
     
     accounts = {
         "admin": "1234",
-        "cost": "142205"
+        "cost": "142205",
+        "login": "1111"
     }
 
     id_input = st.text_input("請輸入 ID")
