@@ -1,10 +1,9 @@
 import streamlit as st
 
-# ✅ 這一定要是第一個 Streamlit 指令
 # 設定頁面
 st.set_page_config(page_title="電費計算器", layout="wide")
 
-# 設定 Logo 標題
+# 顯示 Logo + 頁首
 def show_logo_header(image_file):
     st.image(image_file, width=300)
     st.markdown(
@@ -17,7 +16,8 @@ def show_logo_header(image_file):
 
 # 電費計算頁面
 def electricity_page():
-    # 預設機型與功率
+    st.header("🔌 電費計算器")
+    
     devices = {
         "CT-AQ5H": 2939,
         "CT-AQ10H": 3364,
@@ -27,7 +27,6 @@ def electricity_page():
         "靈巧型-6H": 2200,
     }
 
-    # 預設電價方案
     electricity_rates = {
         "2025夏季電價": {
             "【平日】尖峰期": 6.89,
@@ -109,7 +108,6 @@ def electricity_page():
     st.success(f"💵 **總電費：{total_cost:.2f} 元**")
 
 # 消泡劑成本試算
-
 def defoamer_cost_page():
     st.header("🧪 消泡劑成本試算")
 
@@ -129,6 +127,9 @@ def defoamer_cost_page():
 
         diluted_per_concentrate = total_ratio
         total_diluted = bucket_volume * diluted_per_concentrate
+        concentrate_used = bucket_volume
+        water_used = bucket_volume * (water_part / concentrate_part)
+
         waste_per_liter_diluted = waste_per_x_liters / x_liters
         total_waste_handled = total_diluted * waste_per_liter_diluted
         cost_per_1000L = bucket_price / (total_waste_handled / 1000)
@@ -136,22 +137,19 @@ def defoamer_cost_page():
 
         st.markdown("### 試算結果")
         st.info(f"📦 每桶可稀釋出稀釋液量：約 **{total_diluted:.2f} L**")
+        st.info(f"🧫 使用原液量：約 **{concentrate_used:.2f} L**，使用水量：約 **{water_used:.2f} L**")
+        st.info(f"🧪 每 1 L 稀釋液可處理廢液量：約 **{waste_per_liter_diluted:.2f} L**")
         st.info(f"🧫 每桶原液可處理廢液量：約 **{total_waste_handled:,.0f} L**")
         st.success(f"💰 每 1,000L 廢液處理成本：約 **{cost_per_1000L:.2f} 元**")
         st.success(f"🧾 預估處理 {target_waste:.0f}L 廢液的成本：約 **{cost_for_target:.2f} 元**")
 
-    except:
-        st.error("請輸入正確的稀釋比例格式（例如 1:19）")
-        st.error("請輸入正確的原液容量(L)格式（例如 15.0）")
-        st.error("請輸入正確的每桶售價(元)格式（例如 15000.0）")
-        st.error("請輸入正確的每 X 公升稀釋液可處理的廢液量(L)格式（例如 810.0）")
-        st.error("請輸入正確的稀釋液使用量(L)格式（例如 3.0）")
-        st.error("請輸入正確的預計處理的廢液量(L)格式（例如 3000.0）")
+    except Exception as e:
+        st.error("⚠️ 請確認輸入格式是否正確（例如：1:19）")
+        st.error(f"詳細錯誤：{e}")
 
     st.caption("🔍 備註：因機台及處理液之屬性、消泡劑價格不同而有所差異")
 
 # 原液削減率
-
 def reduction_rate_page():
     st.header("📉 原液削減率計算")
     total_supply = st.number_input("總供應原液量 (L)", min_value=0.0, step=1.0)
@@ -166,7 +164,6 @@ def reduction_rate_page():
         st.success(f"📉 削減率：約 {reduction_rate:.2f}%")
 
 # 原液處理能力
-
 def capacity_page():
     st.header("⚙️ 原液處理能力")
     total_supply = st.number_input("總供應原液量 (L)", min_value=0.0, step=1.0)
@@ -178,21 +175,52 @@ def capacity_page():
         capacity = (total_supply / time_per_batch) * 60
         st.success(f"📦 處理能力：約 {capacity:.2f} L/hr")
 
-# 主程式
+# 私人專區登入
+def private_login_page():
+    st.header("🔒 私人專區登入")
+    
+    accounts = {
+        "admin": "1234",
+        "cost": "142205"
+    }
+
+    id_input = st.text_input("請輸入 ID")
+    pw_input = st.text_input("請輸入密碼", type="password")
+
+    if st.button("登入"):
+        if id_input in accounts and pw_input == accounts[id_input]:
+            st.success("✅ 登入成功！歡迎進入私人專區。")
+            st.markdown("### 🎉 私人專屬內容")
+            st.markdown("- 機密資料一")
+            st.markdown("- 機密資料二")
+            st.markdown("- 機密資料三")
+        else:
+            st.error("❌ 登入失敗，請檢查 ID 或密碼是否正確。")
+
+# 主程式區
 show_logo_header("Company's_Logo_1.png")
 
-page = st.sidebar.selectbox("📁 選擇頁面", [
-    "電費計算器", 
-    "消泡劑成本試算", 
-    "原液削減率", 
-    "原液處理能力"
+main_menu = st.sidebar.selectbox("請選擇主題", [
+    "🌱💧 ESG設備計算專區 💧🌱",
+    "🔒 私人專區"
 ])
 
-if page == "電費計算器":
-    electricity_page()
-elif page == "消泡劑成本試算":
-    defoamer_cost_page()
-elif page == "原液削減率":
-    reduction_rate_page()
-elif page == "原液處理能力":
-    capacity_page()
+if main_menu == "🌱💧 ESG設備計算專區 💧🌱":
+    esg_page = st.sidebar.selectbox("ESG設備選單", [
+        "🔌 電費計算器",
+        "🧪 消泡劑成本試算",
+        "📉 原液削減率",
+        "⚙️ 原液處理能力"
+    ])
+
+    if esg_page == "🔌 電費計算器":
+        electricity_page()
+    elif esg_page == "🧪 消泡劑成本試算":
+        defoamer_cost_page()
+    elif esg_page == "📉 原液削減率":
+        reduction_rate_page()
+    elif esg_page == "⚙️ 原液處理能力":
+        capacity_page()
+
+elif main_menu == "🔒 私人專區":
+    private_login_page()
