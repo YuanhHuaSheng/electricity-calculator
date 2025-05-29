@@ -325,7 +325,7 @@ def inventory_page():
 
 # ---------- 主程式入口 ----------
 def main():
-    show_logo_header(Company's_Logo_1.png")  # 若有 logo.png，否則可改成 st.title
+    show_logo_header("Company's_Logo_1.png")  # 若有 logo.png，否則可改成 st.title
     menu = ["電費計算器", "消泡劑成本試算", "原液削減率", "原液處理能力", "私人專區", "庫存管理專區"]
     choice = st.sidebar.selectbox("功能選單", menu)
 
